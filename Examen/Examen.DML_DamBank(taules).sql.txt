@@ -1,0 +1,132 @@
+DROP DATABASE IF EXISTS BankinCemDB;
+CREATE DATABASE BankinCemDB;
+
+USE BankinCemDB;
+
+
+CREATE TABLE Provincia (
+  idProvincia INT AUTO_INCREMENT,
+  nom VARCHAR(60) NOT NULL,
+  PRIMARY KEY (idProvincia)
+) ENGINE INNODB;
+
+CREATE TABLE Poblacio (
+  idPoblacio INT AUTO_INCREMENT,
+  nom VARCHAR(60) NOT NULL,
+  provincia INT NOT NULL,
+  PRIMARY KEY (idPoblacio),
+  CONSTRAINT fk_poblacio_provincia FOREIGN KEY (provincia) REFERENCES Provincia (idProvincia)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+
+CREATE TABLE ClientB (
+  codi CHAR(10),
+  nif CHAR(9) NOT NULL,
+  clauAcces CHAR(8) NOT NULL,
+  nom VARCHAR(30) NOT NULL,
+  cognoms VARCHAR(60) NOT NULL,
+  dataNaixement DATE NOT NULL,
+  sexe CHAR(1) NOT NULL,
+  email VARCHAR(100) NULL,
+  telefon CHAR(9) NULL,
+  adreca VARCHAR(60) NOT NULL,
+  codiPostal CHAR(5) NOT NULL,
+  poblacioIdPoblacio INT NOT NULL,
+  PRIMARY KEY (codi),
+  CONSTRAINT fk_clientB_poblacio FOREIGN KEY (poblacioIdPoblacio) REFERENCES Poblacio (idPoblacio)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE Oficina (
+  numero CHAR(4) NOT NULL,
+  nom VARCHAR(60) NOT NULL,
+  adreca VARCHAR(60) NOT NULL,
+  codiPostal CHAR(5) NOT NULL,
+  telefon CHAR(9) NOT NULL,
+  poblacioIdPoblacio INT NOT NULL,
+  PRIMARY KEY (numero),
+  CONSTRAINT fk_oficina_poblacio FOREIGN KEY (poblacioIdPoblacio) REFERENCES Poblacio (idPoblacio)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE Compte (
+  idCompte INT AUTO_INCREMENT NOT NULL,
+  numero CHAR(10) NOT NULL,
+  oficinaNumero CHAR(4) NOT NULL,
+  digitControl CHAR(2) NOT NULL,
+  saldo DECIMAL(10,2) NOT NULL,
+  dataObertura DATE NOT NULL,
+  PRIMARY KEY (idCompte),
+  CONSTRAINT fk_compta_oficina FOREIGN KEY (oficinaNumero) REFERENCES Oficina (numero)
+)ENGINE INNODB;
+
+CREATE TABLE Moviment (
+  idMoviment INT AUTO_INCREMENT,
+  importM DECIMAL(10,2) NOT NULL,
+  concepte VARCHAR(60) NOT NULL,
+  dataM DATE NOT NULL,
+  CompteIdCompte INT NOT NULL,
+  PRIMARY KEY (idMoviment),
+  CONSTRAINT fk_moviment_compta FOREIGN KEY (CompteIdCompte) REFERENCES Compte (idCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE Prestec (
+  idPrestec INT AUTO_INCREMENT,
+  capitalInicial DECIMAL(10,2) NOT NULL,
+  interes DECIMAL(4,2) NOT NULL,
+  dataInici DATE NOT NULL,
+  dataFi DATE NOT NULL,
+  clientBCodi CHAR(10) NOT NULL,
+  compteIdCompte INT NOT NULL,
+  PRIMARY KEY (idPrestec),
+  CONSTRAINT fk_prestec_compte FOREIGN KEY (compteIdCompte) REFERENCES Compte(IdCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_prestec_clientB FOREIGN KEY (clientBCodi) REFERENCES ClientB(codi)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE Targeta (
+  numero CHAR(16),
+  pin CHAR(4) NOT NULL,
+  CVV CHAR(3) NOT NULL,
+  mesCaducitat CHAR(2) NOT NULL,
+  anyCaducitat CHAR(2) NOT NULL,
+  limitCaixer DECIMAL(10,2) NOT NULL,
+  limitCompra DECIMAL(10,2) NOT NULL,
+  compteIdCompte INT NOT NULL,
+  clientBCodi CHAR(10) NOT NULL,
+  activa BIT NOT NULL,
+  PRIMARY KEY (numero),
+  CONSTRAINT fk_targeta_clientB FOREIGN KEY (clientBCodi) REFERENCES clientB (codi)
+	ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_targeta_compte FOREIGN KEY (compteIdCompte) REFERENCES Compte (idCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE transferencia (
+  idTransferencia INT AUTO_INCREMENT,
+  compteOrigen INT NOT NULL,
+  compteDesti INT NOT NULL,
+  quantitat DECIMAL(10,2) NOT NULL,
+  concepte VARCHAR(60) NOT NULL,
+  dataInici DATE NOT NULL,
+  dataFi DATE NOT NULL,
+  PRIMARY KEY (idTransferencia),
+  CONSTRAINT fk_transferencia_compte_origen FOREIGN KEY (compteOrigen) REFERENCES Compte(idCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_transferencia_compte_desti  FOREIGN KEY (compteDesti)  REFERENCES Compte(idCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;
+
+CREATE TABLE Vinculacio (
+  compteIdCompte INT,
+  clientBCodi CHAR(10),
+  tipus CHAR(1) NOT NULL,
+  PRIMARY KEY (compteIdCompte, clientBCodi),
+  CONSTRAINT fk_vinculacio_compte FOREIGN KEY (compteIdCompte) REFERENCES Compte(idCompte)
+	ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_vinculacio_client FOREIGN KEY (clientBCodi) REFERENCES ClientB(codi)
+	ON UPDATE CASCADE ON DELETE RESTRICT
+)ENGINE INNODB;

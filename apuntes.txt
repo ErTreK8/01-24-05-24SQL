@@ -1,0 +1,6 @@
+Del color que sea el coche con ese bastidor busca.
+
+------------------------------------------------------------------------------------
+SELECT * FROM Cotxe
+WHERE color = (SELECT color FROM Cotxe WHERE Bastidor='AHPTCDNED63585726')
+------------------------------------------------------------------------------------

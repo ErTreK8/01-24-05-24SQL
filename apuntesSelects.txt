@@ -1,0 +1,4 @@
+un having se pone cuando haya una cosa de agrupacion tipo max, count, etc y hay un group by. Es como un where pero de cuando es de una de estas cosas
+
+Se pone cuando necesitas un where en una columna de agrupacion
+en plan que el coun(algo) sea mas grande algo tipo un 3 o un 5 o una subconsulta

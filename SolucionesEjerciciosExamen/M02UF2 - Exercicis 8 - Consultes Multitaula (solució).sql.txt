@@ -1,0 +1,279 @@
+CREATE DATABASE IF NOT EXISTS dml_ex8consultesMultitaules;
+USE dml_ex8consultesMultitaules;
+
+CREATE TABLE IF NOT EXISTS Propietari(
+    DNI CHAR(9) PRIMARY KEY,
+    nom VARCHAR(20),
+    cognom VARCHAR(30),
+    dataNaix DATE,
+    dataDeFunc DATE
+);
+
+CREATE TABLE IF NOT EXISTS Animal(
+    xip CHAR(11) PRIMARY KEY,
+    nom VARCHAR(20),
+    tipus VARCHAR(30),
+    dataNaix DATE,
+    dataDeFunc DATE,
+    preu DECIMAL (6,2),
+    impost DECIMAL (6,2),
+    propietariDNI CHAR(9),
+    CONSTRAINT fk_animal_propietari FOREIGN KEY (propietariDNI) REFERENCES Propietari(DNI)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+INSERT INTO Propietari VALUES ('11111111A','Joan','Garcia Blasco','2000-04-08', NULL);
+INSERT INTO Propietari VALUES ('22222222B','Maria','Fernandez Castro','1995-02-18', '2023-12-18');
+INSERT INTO Propietari VALUES ('33333333C','Susana','Porto Sanchez','2001-05-09', NULL);
+INSERT INTO Propietari VALUES ('44444444D','Marta','Gonzalez Ruiz','2003-05-14', NULL);
+
+INSERT INTO Animal VALUES ('xip00000001','Mopy','Gat','2017-10-05', NULL, 1000, 120, '11111111A');
+INSERT INTO Animal VALUES ('xip00000002','Kira','Gos','2016-07-05', NULL, 2000, 120.89, '22222222B');
+INSERT INTO Animal VALUES ('xip00000003','Coco','Gat','2017-10-05', '2018-02-15', 1000, 90, NULL);
+INSERT INTO Animal VALUES ('xip00000004','Chipon','Reptil','2016-10-05', '2017-06-07', 2000, 120, '22222222B');
+INSERT INTO Animal VALUES ('xip00000005','Piolín','Ocell','2016-10-05', NULL, 300, 50, NULL);
+INSERT INTO Animal VALUES ('xip00000006','Chispita','Reptil','2016-07-05', NULL, 600, 120.89, '22222222B');
+
+SELECT * FROM Propietari;
+SELECT * FROM Animal;
+
+
+-- 1.Obtenir les espècies de tots els animals que on el seu impost sigui més gran que el 10% del preu.
+
+SELECT DISTINCT tipus FROM Animal 
+WHERE impost > 0.10*preu;
+
+
+-- 2. Obtenir el preu final total de tots els animals vius associats al propietari amb dni 32348676K.
+
+SELECT SUM(preu+impost) AS PreuFinal FROM Animal
+WHERE dataDeFunc IS NULL AND propietariDNI = '32348676K';
+
+-- 3. Obtenir el preu total de tots els animals vius que tenen com a propietari a la Sandra.
+
+SELECT SUM(preu+impost) AS PreuFinal FROM Animal
+WHERE dataDeFunc IS NULL AND propietariDNI = (SELECT dni FROM Propietari WHERE nom = 'Sandra');
+
+SELECT SUM(A.preu+A.impost) AS PreuFinal FROM Animal A
+	INNER JOIN Propietari P ON P.dni = A.propietariDNI
+WHERE A.dataDeFunc IS NULL AND P.nom = 'Sandra';
+
+-- 4. Obtenir el nom del propietari on l'impost de l’animal és més elevat
+
+SELECT DISTINCT P.nom FROM Propietari P
+	INNER JOIN Animal A ON P.DNI = A.propietariDNI
+WHERE A.impost = (SELECT MAX(impost) FROM Animal);
+
+-- 5. Obtenir la informació de tots els animals amb el nom del seu propietari.
+
+SELECT A.*, P.nom FROM Propietari P
+	INNER JOIN Animal A ON P.DNI = A.propietariDNI;
+    
+    
+-- 6. Obtenir el nom de l'animal o animals que tenen l'impost més elevat i que l'animal
+-- encara està en vida.
+
+SELECT nom FROM Animal
+WHERE dataDeFunc IS NULL AND impost = (SELECT MAX(impost) FROM Animal);
+
+-- 7. Obtenir el preu final de tots els animals MORTS ordenats de major a menor preu.
+-- Associa el nom de "Preu Total" a la columna.
+
+SELECT nom, preu+impost AS 'Preu Total' FROM Animal
+WHERE dataDeFunc IS NOT NULL
+ORDER BY preu+impost DESC;
+
+-- 8. Obtenir el preu final més gran de tots els animals.
+
+SELECT MAX(preu+impost) AS PreuMaxim FROM Animal;
+
+
+-- 9 Obtenir el nom de l'animal més car (major preu final).
+
+SELECT nom FROM Animal 
+WHERE (preu+impost) = (SELECT MAX(preu+impost) AS PreuMaxim FROM Animal);
+
+-- 10.Obtenir el nom d’aquells animals que hagin nascut el mateix any que el propietari
+-- “Maria Fernandez Castro” o “Susana Porto Sanchez”.
+
+SELECT nom, YEAR(dataNaix) FROM Animal 
+WHERE YEAR(dataNaix) IN (SELECT YEAR(dataNaix) FROM Propietari 
+							WHERE nom ='Maria' AND cognom = 'Fernandez Castro' 
+								OR nom ='Susana' AND cognom ='Porto Sanchez');
+
+
+-- 11.Obtenir el nom del propietari de l'animal que té un preu final més elevat
+
+SELECT P.nom FROM Propietari P
+	INNER JOIN Animal A ON P.DNI = A.propietariDNI
+WHERE (A.preu+A.impost) = (SELECT MAX(preu+impost) AS PreuMaxim FROM Animal);
+
+-- 12.Veure el nom del propietari amb el seu nom d’animal que han nascut entre els anys
+-- 2010 i 2015 (els animals), que encara estiguin vius.
+
+select P.nom,A.nom from animal A
+        inner join propietari P on P.dni = A.dniPropietari
+    where year(A.dataNaix) between 2010 and 2015 and A.dataDeFunc is null;
+
+
+
+-- 13.Volem veure el nom dels animal que el seu propietari tingui signe de l’horòscop: Cranc
+-- 21/06 --> 20/07
+
+SELECT A.nom FROM Animal A
+	INNER JOIN Propietari P ON P.DNI = A.propietariDNI
+WHERE MONTH(P.dataNaix) = 6 AND DAY(P.dataNaix) >=21 OR MONTH(P.dataNaix) = 7 AND DAY(P.dataNaix) <=20;
+
+-- 14.Mostra un llistat amb el nom de propietari i quantitat d’animals que té d’aquells
+-- propietaris que tinguin més de 3 animals.
+
+SELECT P.nom, COUNT(A.xip) FROM Animal A
+    INNER JOIN Propietari P ON P.DNI = A.propietariDNI
+GROUP BY P.nom
+HAVING COUNT(A.xip) >= 3;
+
+-- 15.Mostra quin és l’animal que el seu preu supera la mitja d’animals d’especie “Rèptil”
+
+SELECT AVG(preu) FROM Animal WHERE tipus = 'Reptil';
+
+SELECT nom, preu FROM Animal 
+WHERE preu > (SELECT AVG(preu) FROM Animal WHERE tipus = 'Reptil');
+
+-- 16.Volem veure el nom dels propietaris que aquest mes faci un any que se li va morir la
+-- seva mascota.
+
+SELECT P.nom FROM Propietari P
+	INNER JOIN Animal A ON P.dni = A.propietariDNI
+WHERE MONTH(A.dataDeFunc) = MONTH(now()) AND YEAR(A.dataDeFunc) = YEAR(now())-1;
+
+
+
+-- 17.Mostra el nom del propietari i el xip i nom d’aquells animals que el seu preu sigui
+-- més gran que el preu dels animals d’espècie “Rèptil” o “Gos”.
+
+
+SELECT DISTINCT preu FROM Animal WHERE tipus IN ('Reptil','Gos');
+
+SELECT P.nom, A.xip FROM Propietari P
+	INNER JOIN Animal A ON P.dni = A.propietariDNI
+WHERE A.preu > ALL (SELECT DISTINCT preu FROM Animal WHERE tipus IN ('Reptil','Gos'));
+
+-- 18.Volem determinar quins animals de l’espècie Rèptils o Gossos 
+-- que han nascut a l’agost i setembre.
+SELECT nom FROM Animal
+    WHERE tipus IN ('Rèptil', 'Gos') AND MONTH(dataNaix) IN(8,9);
+
+-- 19.Volem determinar quants animals té cada propietari. 
+-- No es vol tenir en compte l’espècie “Peixos”.
+
+SELECT P.nom, COUNT(A.xip) FROM Propietari P
+	LEFT JOIN Animal A ON P.dni = A.propietariDNI
+WHERE tipus !='Peix' OR A.tipus IS NULL
+GROUP BY P.dni;
+
+-- 20.Es vol determinar el xip i nom de l’animal que té un preu superior a la mitja
+
+SELECT xip,nom,preu FROM Animal
+WHERE Preu>(SELECT AVG(preu) FROM Animal);
+
+-- 20B. Mostra el dni i nom del propietari,
+-- que la suma de tots els preus dels seus animals son major a 300.
+
+SELECT P.dni, P.nom, SUM(A.preu) FROM Propietari P
+	INNER JOIN Animal A ON P.dni = A.propietariDNI
+GROUP BY P.dni
+HAVING SUM(a.preu) > 300;
+
+
+
+-- 21.Mostra el xip i el nom d’aquells animals que tenen la mateixa espècie 
+-- que els animals que es diuen Kira o Tobby
+
+SELECT tipus FROM Animal WHERE nom IN ('Kira','Tobby');
+
+SELECT xip, nom FROM Animal 
+WHERE tipus IN (SELECT tipus FROM Animal WHERE nom IN ('Kira','Tobby'));
+
+-- 22. Volem determinar quins animals són orfes en quant a propietari.
+SELECT * FROM Animal
+WHERE propietariDNI IS NULL;
+
+-- 23.Mostra de cada Propietari, quants animals té.
+SELECT P.nom, COUNT(A.xip) FROM Propietari P
+	LEFT JOIN Animal A ON P.dni = A.propietariDNI
+GROUP BY P.nom;
+
+-- 23B Mostra el nom d'aquells propietaris que NO tenen animals.
+SELECT P.nom FROM Propietari P
+	LEFT JOIN Animal A ON P.dni = A.propietariDNI
+WHERE A.propietariDNI IS NULL;
+
+-- 24.Crea una nova taula anomenada AnimalsDifunts on hi hagi la informació 
+-- de tots els animals que han mort fins a data d’avui.
+
+CREATE TABLE AnimalsDifunts LIKE Animal;
+INSERT INTO AnimalsDifunts SELECT * FROM Animal WHERE dataDeFunc IS NOT NULL;
+
+-- 25.Volem determinar la mitja de vida (en dies) de cada espècie.
+SELECT tipus, ROUND(AVG(DATEDIFF(dataDeFunc,dataNaix)),2) AS 'Esperança Vida' FROM Animal
+WHERE dataDeFunc IS NOT NULL
+GROUP BY tipus;
+
+-- 26.Volem que li ha preuat a cada propietari el seu conjunt d’animals vius o no vius.
+-- Només es vol tenir en compte les espècies: Gat, Gos, Ocell.
+
+-- 27.Mostra el nom i any de naixement del propietari, xip i 
+-- nom de l’animal d’aquells que -- la dataNaixement de l’animal la mateixa que la dels animals que han mort el mes de
+-- Juliol, Octubre o Novembre.
+
+-- 28.Per cada any, mostra la quantitat d’animals que han mort. No cal tenir en compte les
+-- especies de Gat i Gos i tampoc l’any 2015 perquè vam cedir l’exploració del negoci.
+
+
+-- 29.Tenint en compte que tots els animals es van donar d’alta a la Clínica Veterinària un
+-- cop passat els primers 30 dies després de que van néixer, i tenint en compte que
+-- cada dia que està inscrit a la Clínica, preua 2,60€, calcula la despesa per animal VIU
+-- a data d’avui només dels animals on el seu propietari ha nascut abans del 2000.
+-- Ex: Bobby va néixer 01/01/2015 doncs calcular els preu tenint en compte 2,60€ a
+-- partir del 01/02/2015 fins a data d’avui.
+SELECT A.xip, A.nom, (IF(A.dataDeFunc IS NOT NULL,DATEDIFF(A.dataDefunc,A.dataNaix),DATEDIFF(now(),A.dataNaix))-30)*2.6 AS Cost FROM Animal A
+	INNER JOIN Propietari P ON P.DNI = A.propietariDNI
+WHERE YEAR(P.dataNaix) < 2000;
+
+-- 30. A partir d'ara es vol saber la població de cada Propietari. De la població
+-- es vol emmagatzemar el CP, el nom de la població i la província. Alerta amb la
+-- redundància d’informació.
+
+CREATE TABLE IF NOT EXISTS Poblacio(
+    CP CHAR (5) PRIMARY KEY,
+    nom VARCHAR (20),
+    provincia VARCHAR (20)
+);
+ALTER TABLE Propietari ADD COLUMN poblacioCP CHAR (5);
+ALTER TABLE Propietari ADD CONSTRAINT FK_propietari_poblacio FOREIGN KEY(poblacioCP) REFERENCES Poblacio(CP)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT;
+
+-- 31.Mostra el nom d'aquells animals, excepte les tortugues, on l'animal sigui orfa
+-- d'aquells propietaris que eren de Granollers o Cardedeu.
+SELECT A.nom FROM Animal A
+	INNER JOIN Propietari Pr ON Pr.DNI = A.propietariDNI
+    INNER JOIN Poblacio Po ON Po.CP = Pr.poblacioCP
+WHERE A.tipus != 'Tortuga' AND Pr.dataDeFun IS NOT NULL AND Po.nom IN ('Granollers','Cardedeu');
+-- 32.Mostra per any de naixement de propietari (només els vius) el total d'animals que hi
+-- han. Només cal tenir en compte els que tenen un preu superior a 100€ i que el seu
+-- propietari sigui de codi postal '08430' o Granollers.
+
+SELECT YEAR(Pr.dataNaix) AS AnyNaix, COUNT(A.xip) AS Total FROM Poblacio Po
+	INNER JOIN Propietari Pr ON Po.CP = Pr.poblacioCP
+    LEFT JOIN Animal A ON Pr.DNI = A.propietariDNI
+WHERE Pr.dataDeFunc IS NULL AND A.preu >100 AND (Po.CP ='08430' OR Po.nom = 'Granollers')
+GROUP BY AnyNaix;
+
+-- 33.Mostra per nom de població de propietari quants animals estan morts
+SELECT Po.nom, COUNT(A.xip) as TotalMorts FROM Poblacio Po
+	LEFT JOIN Propietari Pr ON Po.CP = Pr.poblacioCP
+    LEFT JOIN Animal A ON Pr.DNI = A.propietariDNI
+GROUP BY Po.nom;
+

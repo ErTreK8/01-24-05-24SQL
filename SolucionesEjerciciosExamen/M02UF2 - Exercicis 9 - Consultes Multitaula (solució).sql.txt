@@ -1,0 +1,275 @@
+
+CREATE DATABASE m02uf2activitat9dmlMultitaula;
+USE m02uf2activitat9dmlMultitaula;
+
+CREATE TABLE IF NOT EXISTS FormatA(
+    nom VARCHAR(5),
+    tipus VARCHAR(20),
+    PRIMARY KEY (nom)
+ );
+
+CREATE TABLE IF NOT EXISTS Usuari(
+    login varchar(25),
+    nom varchar(40),
+    dataCr date,
+    PRIMARY KEY(login)
+);
+
+-- Arxiu:{nom1(pk);versio1(pk);dataCr,nom2(fk); versio2(fk); usuariLogin(fk)}
+CREATE TABLE IF NOT EXISTS Arxiu(
+	nom1 VARCHAR(20),
+    versio1 TINYINT DEFAULT 0,
+    dataCr DATE,
+    nom2 VARCHAR(20),
+    versio2 TINYINT,
+    usuariLogin VARCHAR(25) NOT NULL,
+    PRIMARY KEY(nom1,versio1),
+    CONSTRAINT fk_arxiu_arxiu FOREIGN KEY(nom2,versio2) REFERENCES Arxiu(nom1,versio1)
+		ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT fk_arxiu_usuari FOREIGN KEY(usuariLogin) REFERENCES Usuari(login)
+    	ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+
+-- Disponible:{arxiuNom(pk,fk);arxiuVersio(pk,fk);formatNom(pk,fk)}
+CREATE TABLE IF NOT EXISTS Disponible(
+	arxiuNom VARCHAR(20),
+    arxiuVersio TINYINT,
+    formatNom VARCHAR(5),
+    PRIMARY KEY(arxiuNom,arxiuVersio,formatNom),
+    CONSTRAINT fk_disponible_arxiu FOREIGN KEY(arxiuNom,arxiuVersio) REFERENCES Arxiu(nom1,versio1)
+		ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT fk_disponible_formatA FOREIGN KEY (formatNom) REFERENCES FormatA(nom)
+    	ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+INSERT INTO FormatA VALUES ('jpg','imatge/jpeg'), ('gif','imatge/gif'),
+			('mp4','video/mpeg'), ('docx','document/docx'),
+            ('png', 'imatge/png'),('avi', 'video/avi'),
+			('pdf', 'document/pdf'),('mp3', 'audio/mpeg');
+
+INSERT INTO FormatA VALUES ('pptx','imatge/pptx'), ('xlsx','document/xlsx'),
+		('txt','document/txt'),('mkv','video/mkv'),
+        ('bmp','imatge/bmp'),('csv','document/csv'),
+        ('css','web/css'),('mov','video/mov'),
+        ('json','web/json'),('html','web/html');
+
+INSERT INTO Usuari VALUES ('sperez','Sandra Perez','2023-10-05'),('pramos','Pol Ramos','2023-11-05'),
+		('dporti','David Porti','2022-05-05'),	('sjimenez','Sergi Jimenez','2023-05-05'),
+		('dgonzalez','David González','2023-09-01'),('xgarcia','Xavier García','2022-01-11'),
+		('dwall','David Wall','2023-09-14');
+
+INSERT INTO Usuari VALUES ('jmendez', 'Juan Mendez', '2023-12-15'),('ecastro', 'Elena Castro', '2022-07-20'),
+    ('lmartin', 'Laura Martin', '2023-03-02'), ('jgomez', 'Jose Gomez', '2022-11-18'),
+    ('rlopez', 'Raquel Lopez', '2023-08-09'),  ('fgarcia', 'Fernando Garcia', '2022-04-25'),
+    ('mrodriguez', 'Maria Rodriguez', '2023-05-30'),('rcano', 'Roberto Cano', '2022-09-08'),
+    ('llopez', 'Luis Lopez', '2023-01-22'), ('pgomez', 'Paula Gomez', '2022-06-12');
+
+INSERT INTO Arxiu VALUES ('DossierM3',1,'2000-10-05',NULL,NULL,'sperez'), ('DossierM3',2,'2005-10-05','DossierM3',1,'sperez'),
+						('DossierM3',3,'2005-10-05','DossierM3',1,'pramos'),('VideoNadal',1,'2017-12-05',NULL,NULL,'sperez'),
+						('La Porxada',1,'2018-12-05',NULL,NULL,'dporti'), ('Headshot',1,'2013-08-01',NULL,NULL,'dgonzalez'),
+						('LlistatAlumnes',1,'2017-09-14',NULL,NULL,'dgonzalez'),('LlistatAlumnes',2,'2017-11-14','LlistatAlumnes',1,'dgonzalez'),
+						('Web Design',1,'2019-01-15',NULL,NULL,'xgarcia');
+INSERT INTO Arxiu VALUES  ('ProjectZ', 1, '2020-05-10', NULL, NULL, 'jmendez'),  ('ProjectZ', 2, '2021-02-15', 'ProjectZ', 1, 'jmendez'),
+    ('ProjectZ', 3, '2021-02-15', 'ProjectZ', 1, 'ecastro'),  ('PresentationA', 1, '2019-08-20', NULL, NULL, 'lmartin'),
+    ('PresentationB', 1, '2022-04-05', NULL, NULL, 'jgomez'), ('AnnualReport', 1, '2021-11-30', NULL, NULL, 'rlopez'),
+    ('BudgetPlan', 1, '2020-07-15', NULL, NULL, 'fgarcia'), ('MarketingStrategy', 1, '2023-06-22', NULL, NULL, 'mrodriguez'),
+    ('ClientMeeting', 1, '2022-10-08', NULL, NULL, 'rcano'), ('ProductLaunch', 1, '2023-02-12', NULL, NULL, 'llopez'),
+    ('ResearchPaper', 1, '2022-01-02', NULL, NULL, 'pgomez'), ('Demos', 1, '2020-04-18', NULL, NULL, 'sperez'),
+    ('Demos', 2, '2021-06-20', 'Demos', 1, 'sperez'), ('TrainingMaterials', 1, '2019-12-10', NULL, NULL, 'dporti'),
+    ('CodeReview', 1, '2023-03-25', NULL, NULL, 'dgonzalez'), ('CodeReview', 2, '2023-04-05', 'CodeReview', 1, 'dgonzalez'),
+    ('Prototypes', 1, '2020-09-14', NULL, NULL, 'xgarcia'), ('Prototypes', 2, '2021-01-18', 'Prototypes', 1, 'xgarcia'),
+    ('Prototypes', 3, '2021-04-22', 'Prototypes', 1, 'xgarcia'), ('CustomerFeedback', 1, '2022-08-10', NULL, NULL, 'dwall');
+
+INSERT INTO Disponible VALUES ('DossierM3',1,'docx'); 
+INSERT INTO Disponible VALUES ('DossierM3',2,'docx');
+INSERT INTO Disponible VALUES ('DossierM3',3,'docx');	
+INSERT INTO Disponible VALUES ('VideoNadal',1,'mp4');
+INSERT INTO Disponible VALUES ('La Porxada',1,'jpg');	
+INSERT INTO Disponible VALUES ('La Porxada',1,'gif');
+INSERT INTO Disponible VALUES ('LlistatAlumnes',1,'docx');
+INSERT INTO Disponible VALUES ('Web Design', 1, 'docx');
+INSERT INTO Disponible VALUES ('VideoNadal', 1, 'avi');
+INSERT INTO Disponible VALUES ('La Porxada', 1, 'png');
+INSERT INTO Disponible VALUES ('LlistatAlumnes', 2, 'pdf');
+INSERT INTO Disponible VALUES ('ProjectZ', 1, 'docx');
+INSERT INTO Disponible VALUES ('ProjectZ', 2, 'docx');
+INSERT INTO Disponible VALUES ('PresentationA', 1, 'pptx');
+INSERT INTO Disponible VALUES ('AnnualReport', 1, 'pdf');
+INSERT INTO Disponible VALUES ('BudgetPlan', 1, 'xlsx');
+INSERT INTO Disponible VALUES ('MarketingStrategy', 1, 'pdf');
+INSERT INTO Disponible VALUES ('DossierM3', 1, 'pdf');
+INSERT INTO Disponible VALUES ('DossierM3', 1, 'txt');
+INSERT INTO Disponible VALUES ('VideoNadal', 1, 'mkv');
+INSERT INTO Disponible VALUES ('La Porxada', 1, 'bmp');
+INSERT INTO Disponible VALUES ('LlistatAlumnes', 1, 'csv');
+INSERT INTO Disponible VALUES ('Web Design', 1, 'css');
+INSERT INTO Disponible VALUES ('ProjectZ', 2, 'pptx');
+INSERT INTO Disponible VALUES ('ProjectZ', 1, 'pdf');
+INSERT INTO Disponible VALUES ('AnnualReport', 1, 'pptx');
+INSERT INTO Disponible VALUES ('MarketingStrategy', 1, 'docx');
+INSERT INTO Disponible VALUES ('CustomerFeedback', 1, 'json');
+INSERT INTO Disponible VALUES ('Demos', 1, 'mov');
+    
+
+-- CONSULTES:
+
+
+-- 1.	Obtenir el nom de tots els usuaris que tinguin algun arxiu creat.
+
+SELECT DISTINCT U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin;
+    
+-- 2.	Obtenir el nom del format de tots els arxius que s'han creat durant l'any 2023. 
+-- El nom de la columna ha de ser "Nom Format".
+
+SELECT DISTINCT D.formatNom AS 'Nom Format' FROM Arxiu A
+	INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+WHERE YEAR(A.dataCr) = 2023;
+
+
+-- 3.	Obtenir tots els arxius del tipus amb format imatge.
+
+SELECT A.*, F.tipus FROM Arxiu A
+		INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+        INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE F.tipus LIKE 'imatge%';
+
+-- 4.	Obtenir el total d'arxius originals de cada usuari creats l'any 2023.
+SELECT U.nom,count(A.nom1) as videos FROM Arxiu A
+    INNER JOIN Usuari U ON A.usuariLogin=U.Login
+    WHERE A.versio1=1 AND year(A.dataCR)=2023
+GROUP BY U.login;
+
+-- 5.	Obtenir el nom de l'autor de l'arxiu més antic.
+
+
+SELECT U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+WHERE A.dataCr = (SELECT MIN(dataCr) FROM Arxiu);
+
+-- 6.	Obtenir el total d'arxius originals creats l'any 2023 creats per l'usuari de nom Jose Gomez.
+SELECT COUNT(*) AS TotalArxiu FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+WHERE YEAR(A.dataCr) = 2023 AND U.nom = 'Jose Gomez' AND versio1 = 1;
+
+-- 7.	Obtenir tota la informació de totes les versions dels arxius. 
+--      Cal ordenar pel nom de l'arxiu i de la versió més recents a la més antiga.
+
+SELECT * FROM Arxiu 
+WHERE versio1 !=1
+ORDER BY nom1 ASC, versio1 DESC; 
+
+-- 8.	Obtenir el login i nom d’usuari de tots els autors que hagin creat algun arxiu 
+-- que el seu tipus sigui imatge.
+SELECT DISTINCT U.login, U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+    INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+    INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE F.tipus LIKE 'imatge%';
+
+
+-- 9.	Mostrar quins formats d’arxiu tenen més de 3 arxius disponibles.
+
+SELECT formatNom, COUNT(*) AS Total FROM Disponible
+GROUP BY formatNom
+HAVING total >3; 
+
+
+-- 10.	Identificar l'arxiu amb el número de versió més gran
+
+SELECT * FROM Arxiu 
+WHERE versio1 = (SELECT MAX(versio1) FROM Arxiu);
+
+-- 11.	Mostra un llistat amb el nom d’usuari i la quantitat d’arxius que ha creat.
+SELECT U.nom, COUNT(A.nom1) AS QttArxius FROM Usuari U
+	LEFT JOIN Arxiu A ON U.login = A.usuariLogin
+GROUP BY U.login;
+
+-- 12.	Obtenir el nom dels usuaris que hagin creat arxius amb  
+-- el tipus de format imatge
+SELECT DISTINCT U.login, U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+    INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+    INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE F.tipus LIKE 'imatge%';
+
+
+-- 13.	Obtenir el nom de l'autor de l'arxiu original més nou que sigui 
+-- del tipus imatge
+
+
+SELECT U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+    INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+	INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE F.tipus LIKE 'imatge%' AND A.versio1 = 1 AND A.dataCr = (SELECT MAX(A.dataCr) FROM Arxiu A
+															INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+															INNER JOIN FormatA F ON F.nom = D.formatNom
+															WHERE F.tipus LIKE 'imatge%' AND A.versio1 = 1);
+
+-- 14.	Obtenir un llistat d’autors amb login i 
+-- nom d’aquells que encara no han creat cap arxiu.
+
+SELECT U.login, U.nom FROM Usuari U
+	LEFT JOIN Arxiu A ON U.login = A.usuariLogin
+WHERE A.usuariLogin IS NULL;
+-- 15.	Mostra quins son els noms del 3r, 4t i 5è arxiu ordenat 
+-- per data de creació d’aquells arxius en format docx o jpg. 
+-- Cal mostrar l’usuari que l’ha creat.
+
+SELECT A.usuariLogin, A.nom1, D.formatNom FROM Arxiu A
+	INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+WHERE D.formatNom IN ('docx','jpg')
+ORDER BY A.dataCr DESC
+LIMIT 2,3;
+
+-- 16.	Volem veure quins usuaris tenen més arxius que l’usuari 
+-- amb nom ‘Roberto Cano’
+
+SELECT U.nom, COUNT(A.nom1) AS QttArxius FROM Usuari U
+	LEFT JOIN Arxiu A ON U.login = A.usuariLogin
+GROUP BY U.login
+HAVING QttArxiu > (SELECT COUNT(A.nom1) FROM Arxiu A
+					INNER JOIN Usuari U ON U.login = A.usuariLogin
+					WHERE U.nom = 'Roberto Cano');
+
+
+
+-- 17.	Volem veure el nom dels usuaris creats abans del 2010 que 
+-- hagin realitzat algun arxiu originals, en tipus format vídeo o 
+-- que el nom del format sigui PDF. 
+
+SELECT U.nom FROM Usuari U
+	INNER JOIN Arxiu A ON U.login = A.usuariLogin
+    INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+	INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE YEAR(U.dataCr) < 2010 AND A.versio1 = 1 AND 
+		(F.tipus LIKE 'video%' OR F.nom = 'PDF');
+
+
+-- 18.	Volem veure tots els formats que encara no han sigut utilitzats. 
+SELECT F.nom FROM FormatA F 
+	LEFT JOIN Disponible D ON F.nom = D.formatNom
+WHERE D.formatNom IS NULL;
+
+
+-- 19.	Volem veure el total d’arxius amb nom de format pdf,  
+-- docx, mpg per any de creació de l’arxiu i per format.
+SELECT  YEAR(A.dataCr) AS anyCreacio, F.nom, COUNT(A.nom1) AS totalArxius FROM Arxiu A
+    INNER JOIN Disponible D ON A.nom1 = D.arxiuNom AND A.versio1 = D.arxiuVersio
+    INNER JOIN FormatA F ON F.nom = D.formatNom
+WHERE F.nom IN ('pdf', 'docx', 'mpg')
+GROUP BY anyCreacio, F.nom
+ORDER BY anyCreacio, F.nom;
+
+-- 20.	Es vol premiar als usuaris que porten 10 o més anys a l’empresa. 
+-- Aquests usuaris es consideren VETERANS. 
+-- Volem saber el total d’arxius que ha creat cada veterà.
+
+SELECT U.nom, COUNT(A.nom1) AS QttArxius FROM Usuari U
+	LEFT JOIN Arxiu A ON U.login = A.usuariLogin
+WHERE dateDiff(now(),U.dataCr) > 365*10
+GROUP BY U.login;
+
+
